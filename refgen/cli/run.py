@@ -6,12 +6,6 @@ from argparse import ArgumentParser
 from refgen import Extractor
 
 def parse_args(argv):
-    """parse command-line arguments, see usage by typing,
-
-        ref-gen -h,
-
-    for usage"""
-
     parser = ArgumentParser(description = 'Command-line interface' + \
         ' for reference genome extractor')
     parser.add_argument(
@@ -25,8 +19,15 @@ def parse_args(argv):
         action      = 'store_true',
         default     = False,
         help        = 're-download summary file if included')
+    parser.add_argument(
+        '--output',
+        action      = 'store',
+        nargs       = 1,
+        type        = str,
+        default     = None,
+        help        = 'path to store gff file')
     args = parser.parse_args(argv)
-    return (' '.join(args.term), args.update)
+    return (' '.join(args.term), args.update, args.output[0])
 
 def choose_refgen(extr, term):
     """retrieve qualified reference genomes candidates, and allow users to
@@ -66,19 +67,19 @@ def choose_refgen(extr, term):
             break
     return chosen_ftp_url
 
-def download(extr, ftp_url):
+def download(extr, ftp_url, output):
     """download the specified reference genome using the ftp_url returned"""
 
     print("Downloading...")
-    extr.extract(ftp_url)
+    extr.extract(ftp_url, output)
     print("Finished!")
 
 def main():
 
-    term, update    = parse_args(sys.argv[1:])
-    extr            = Extractor(update)
-    ftp_url         = choose_refgen(extr, term)
-    download(ftp_url)
+    term, update, output    = parse_args(sys.argv[1:])
+    extr                    = Extractor(update)
+    ftp_url                 = choose_refgen(extr, term)
+    download(extr, ftp_url, output)
 
 if __name__ == '__main__':
     main()
