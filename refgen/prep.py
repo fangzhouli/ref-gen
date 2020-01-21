@@ -13,7 +13,7 @@ class PreprocessConst(object):
     DATA_SUMMARY    = 'summary.txt'
 
 class Preprocessor(object):
-    """Configuration object for reference genome extractor module
+    """preprocessor object for reference genome extractor module
 
     parameters
     ==========
