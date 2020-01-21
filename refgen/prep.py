@@ -10,7 +10,7 @@ class PreprocessConst(object):
 
     DATA_DIR        = 'data'
     DATA_GFF        = 'gff'
-    DATA_SUMMARY    = 'summary'
+    DATA_SUMMARY    = 'summary.txt'
 
 class Preprocessor(object):
     """Configuration object for reference genome extractor module
