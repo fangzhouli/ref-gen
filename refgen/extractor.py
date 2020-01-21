@@ -85,13 +85,13 @@ class Extractor(object):
                 ExtractorConst.SUMM_COL_NAME_GBRS,
                 ExtractorConst.SUMM_COL_NAME_FTP])
 
-    def _find_best_refseq(self, term):
+    def find_refgen(self, term):
         """look for the best refence genome candidate
 
         input:
-            term    : (str) str
+            term            : (str) str
         output:
-            df_     : (dataframe) ordered and filtered candidates"""
+            (list of tuple) : (assembly, name, ftp_url)"""
 
         df = self._load_summary()
 
@@ -100,8 +100,8 @@ class Extractor(object):
         df = df[df.gbrs != ExtractorConst.NA]
 
         # 2. choose rows related to the term
-        df = df[df.name.str.contains(term) |
-                df.name.str.contains(term.capitalize())]
+        df = df[df.name.str.contains(term, regex = False) |
+                df.name.str.contains(term.capitalize(), regex = False)]
 
         # 3. prioritize refseq_cat: representative -> reference -> na
         df_ = df[df.refseq_cat == ExtractorConst.REFSEQ_CAT_REP_GEN]
@@ -135,23 +135,17 @@ class Extractor(object):
             df_ = df[df.genome == ExtractorConst.GENOME_PARTIAL]
         df = df_
 
-        if df.shape[0] == 0:
-            print("There is no available information for " + term)
-            print("Please check your spelling.")
-            exit()
-        else:
-            return df
+        return list(zip(df.asm_acc.tolist(), df.name.tolist(), df.ftp.tolist()))
 
-    def extract(self, term, output = None):
+    def extract(self, ftp_url, output = None):
         """find the best reference genome of the term from the NCBI server and
         download the binary file to the specified local path
 
         input:
-            term        : (str)
+            ftp_url     : (str)
             output      : (str, default PATH = omics/refgen/data/gff)"""
 
         # pick the first candid and parse the ftp path
-        ftp_url         = self._find_best_refseq(term).iloc[0].ftp
         ftp_dir_path    = ftp_url[FtpConst.URL_PREFIX_LEN:]
         file_prefix     = ftp_dir_path.split(SepConst.SLASH)[-1]
 
