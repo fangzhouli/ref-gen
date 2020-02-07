@@ -85,13 +85,15 @@ class Extractor(object):
                 ExtractorConst.SUMM_COL_NAME_GBRS,
                 ExtractorConst.SUMM_COL_NAME_FTP])
 
-    def find_refgen(self, term):
+    def find_refgen(self, term, output = None):
         """look for the best refence genome candidate
 
         input:
-            term            : (str) str
+            term                    : (str) str
+            output                  : (str OR None) if None, return list
+                otherwise download to the specified path
         output:
-            (list of tuple) : (assembly, name, ftp_url)"""
+            (list of tuple OR None) : (assembly, name, ftp_url)"""
 
         df = self._load_summary()
 
@@ -135,15 +137,19 @@ class Extractor(object):
             df_ = df[df.genome == ExtractorConst.GENOME_PARTIAL]
         df = df_
 
-        return list(zip(df.asm_acc.tolist(), df.name.tolist(), df.ftp.tolist()))
+        if output is None:
+            return list(zip(df.asm_acc.tolist(), df.name.tolist(),
+                df.ftp.tolist()))
+        else:
+            pd.concat([df.asm_acc, df.name, df.ftp], axis = 1).to_csv(output)
 
     def extract(self, ftp_url, output = None):
         """find the best reference genome of the term from the NCBI server and
         download the binary file to the specified local path
 
         input:
-            ftp_url     : (str)
-            output      : (str, default PATH = omics/refgen/data/gff)"""
+            ftp_url     : (str) used path directly from find_refgen
+            output      : (str, default PATH = '.')"""
 
         # pick the first candid and parse the ftp path
         ftp_dir_path    = ftp_url[FtpConst.URL_PREFIX_LEN:]
@@ -163,9 +169,7 @@ class Extractor(object):
             file_gff_name])
 
         if output is None:
-            output  = SepConst.SLASH.join([
-                self.prep.path_gff,
-                file_prefix])
+            output  = '.'
 
         ftp.download(
             FtpConst.HOST,
