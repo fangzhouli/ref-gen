@@ -24,10 +24,10 @@ def parse_args(argv):
         action      = 'store',
         nargs       = 1,
         type        = str,
-        default     = None,
+        default     = 'output.csv',
         help        = 'path to store gff file')
     args = parser.parse_args(argv)
-    return (' '.join(args.term), args.update, args.output[0])
+    return (' '.join(args.term), args.update, args.output)
 
 def choose_refgen(extr, term):
     """retrieve qualified reference genomes candidates, and allow users to
