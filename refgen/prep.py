@@ -25,7 +25,6 @@ class Preprocessor(object):
     ==========
     path_dir        : (str) absolute path to parent dir
     path_data       : (str) absolute path to data dir
-    path_gff        : (str) basolute path to gff data dir
     path_summary    : (str) absolute path to summary file"""
 
     def __init__(self, update_summary = False):
@@ -44,7 +43,6 @@ class Preprocessor(object):
 
         if not os.path.exists(self.path_data):
             os.mkdir(self.path_data)
-            os.mkdir(self.path_gff)
             self._download_summary()
         elif self.update_summary:
             self._download_summary()
@@ -54,9 +52,6 @@ class Preprocessor(object):
         self.path_data      = SepConst.SLASH.join([
             self.path_dir,
             PreprocessConst.DATA_DIR])
-        self.path_gff       = SepConst.SLASH.join([
-            self.path_data,
-            PreprocessConst.DATA_GFF])
         self.path_summary   = SepConst.SLASH.join([
             self.path_data,
             PreprocessConst.DATA_SUMMARY])
