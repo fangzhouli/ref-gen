@@ -14,6 +14,7 @@ def ref_find():
 def ref_download():
     ftp_url = sys.argv[1]
     output = sys.argv[2]
+    proc_tag = sys.argv[3]
 
     extr = Extractor()
-    extr.extract(ftp_url, output)
+    extr.extract(ftp_url, output, proc_tag)
