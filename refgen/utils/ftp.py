@@ -1,69 +1,49 @@
 from ftplib import FTP
-import sys
-import gzip
+import json
+import math
 
-class FtpConst(object):
-
-    FORMAT          = 'utf-8'
-
-    MODE_BIN        = 'b'
-    MODE_TEXT       = 't'
-
-    COMM_RETRIEVE   = 'RETR'
-
-    NEW_LINE        = '\n'
-    SPACE           = ' '
-    EMPTY_BIN       = b''
-
-def download(host, filename, local, mode):
+def download(host, filename, proc_tag = None):
     """download a file on ftp server to the local in binary
 
-    input
+    input:
         host        : (str) server host
-        filename    : (str) path of target file on server
-        local       : (str) path target file downloaded locally
-        mode        : (str) 'b' for binary, 't' for text on server
+        filename    : (str) path of target file on server"""
 
-    output
-        None"""
-
-    # FTP configuration
-    ftp = FTP(host)
-    ftp.encoding = FtpConst.FORMAT
+    ftp             = FTP(host)
+    ftp.encoding    = 'utf-8'
     ftp.login()
 
-    # Start reading from FTP server
-    content_list = []
+    if proc_tag is not None:
+        # callback function fot retr
+        def updated_process(block, args):
+            args['content']     += block
+            args['curr_size']   += len(block)
 
-    if mode == FtpConst.MODE_TEXT:
+            # update json file for each 10%
+            perc = args['curr_size'] / args['total_size']
+            if perc >= args['curr_thres']:
+                args['curr_thres'] = math.ceil(perc * 10) / 10
+                process = json.load(open(args['proc_tag'], 'r'))
+                process['curr_size'] = args['curr_size']
+                process['curr_perc'] = perc
+                json.dump(process, open(args['proc_tag'], 'w'))
 
-        # text mode
-        ftp.retrlines(
-            cmd         = FtpConst.SPACE.join([
-                FtpConst.COMM_RETRIEVE,
-                filename]),
-            callback    = content_list.append)
-        content = FtpConst.NEW_LINE.join(content_list)
-
-    elif mode == FtpConst.MODE_BIN:
-
-        # binar mode
+        callback_args   = {
+            'content'       : b'',
+            'total_size'    : ftp.size(filename),
+            'curr_size'     : 0,
+            'curr_thres'    : 0.1,
+            'proc_tag'      : proc_tag}
         ftp.retrbinary(
-            cmd         = FtpConst.SPACE.join([
-                FtpConst.COMM_RETRIEVE,
-                filename]),
-            callback    = content_list.append)
-        content_b   = FtpConst.EMPTY_BIN.join(content_list)
-        content     = gzip.decompress(content_b).decode(FtpConst.FORMAT)
-
+            cmd         = 'RETR ' + filename,
+            callback    = lambda block: updated_process(block, callback_args),
+            blocksize   = 8192)
+        content = callback_args['content']
     else:
-        raise ValueError("mode has to be either 't' (text) or 'b' (binary)")
-
-    ftp.quit()
-
-    # Write to local
-    with open(local, 'wb') as f:
-        if sys.version_info < (3, 0):
-            f.write(bytes(content))
-        else:
-            f.write(bytes(content,'utf8'))
+        content = []
+        ftp.retrbinary(
+            cmd         = 'RETR ' + filename,
+            callback    = content.append,
+            blocksize   = 8192)
+        content = b''.join(content)
+    return content

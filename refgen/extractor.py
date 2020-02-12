@@ -1,5 +1,7 @@
 """extractor object for reference genome pipeline"""
 
+import gzip
+
 import pandas as pd
 
 from .prep import Preprocessor
@@ -143,7 +145,7 @@ class Extractor(object):
         else:
             pd.concat([df.asm_acc, df.name, df.ftp], axis = 1).to_csv(output)
 
-    def extract(self, ftp_url, output = None):
+    def extract(self, ftp_url, output = None, proc_tag = None):
         """find the best reference genome of the term from the NCBI server and
         download the binary file to the specified local path
 
@@ -168,11 +170,10 @@ class Extractor(object):
             ftp_dir_path,
             file_gff_name])
 
-        if output is None:
-            output  = '.'
+        content = bytes(gzip.decompress(ftp.download(
+            FtpConst.HOST, file_path, proc_tag)).decode('utf-8'), 'utf8')
 
-        ftp.download(
-            FtpConst.HOST,
-            file_path,
-            output,
-            'b')
+        if output is None:
+            output  = 'output.txt'
+        with open(output, 'wb') as f:
+            f.write(content)

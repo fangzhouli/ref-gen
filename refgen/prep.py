@@ -32,11 +32,8 @@ class Preprocessor(object):
         self._preprocess()
 
     def _download_summary(self):
-        ftp.download(
-            FtpConst.HOST,
-            FtpConst.PATH_SUMMARY,
-            self.path_summary,
-            't')
+        with open(self.path_summary, 'wb') as f:
+            f.write(ftp.download(FtpConst.HOST, FtpConst.PATH_SUMMARY))
 
     def _init_data(self):
         """initialize an empty directory for the first time, unless specified"""
@@ -55,5 +52,4 @@ class Preprocessor(object):
         self.path_summary   = SepConst.SLASH.join([
             self.path_data,
             PreprocessConst.DATA_SUMMARY])
-
         self._init_data()
